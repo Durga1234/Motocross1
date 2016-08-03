@@ -1,0 +1,133 @@
+---
+title: "Auto-manual"
+author: "Durga Gaddam"
+date: "August 3, 2016"
+output: html_document
+---
+
+
+Durga Gaddam
+
+Executive Summary:
+
+Objective: The Main Aim of this project is 
+(i) To determine whether automatic transmission gives more miles per gallon or manual transmission gives
+
+(ii) Analyze different variantions of mpg and other factors
+
+Observations: The data contains different factors that can be considered for a vehicle. In this data, few models with auto transmission and few models with manual transmission are given. It is observed that mean of manual mpg is 7.25 greater than mean of auto transmission.
+
+
+Solution: 
+
+Using different Simple Linear Regression, multi linear regression and different concepts like ANOVA, Hypothesis Testing, and Cook's distance we can solve this problem. After analysis using these concepts we conclude that there is no much difference between automatic and manual transmissions, without considering other factors.
+
+
+
+library(plotly)
+library(calibrate)
+library(datasets)
+library(ggplot2)
+```{r}
+
+data=mtcars
+names(mtcars)
+
+
+```
+The data is a collection from car magzine with different models. Each model has a set of data described using the mile per gallon(mpg), number of cylinders(cyl), displacement(disp), horse power(hp), rear axel ration (drat) , weight(wt), time taken to cover quater of mile (qsec) , velocity per substrate concentration (vs) , automatic=0 or manual=1 (am) , transmissions(gear), and Number of carberators (carb)
+```{r}
+table(data$am)
+hist(data$am, xlab= "Auto=0, Manual=1", ylab= "Number of Vehicles")
+
+```
+There are 19 automatic and 13 manual transmission vehicles.
+
+To find the answer for the question whether automatic transmission vehicles give more mileage than manual transmission vehicles, we need to find the relation between mpg and am, and what other factors influence the mileage of a given model.
+```{r}
+cor(data$mpg,data$cyl)
+## We can infer that there is a negative correlation between mpg and cyl. So as the number of cylinders increases, Mileage reduces
+
+cor(data$mpg,data$wt)
+## We can infer that there is a negative correlation between mpg and wt. So as the weight of a car increases, Mileage reduces
+
+```
+
+```{r}
+## Mean Mileage given by Automatic and manual transmissions
+aggregate(mpg~am,data,mean)
+```
+We can clearly infer that manual transmissions give 7.25 mileage more than auto transmission vehicles. However, We cannot conclude by just finding the mean of two variable without considering other factors that effect the mileage.
+
+###Hypothesis Testing
+
+Null Hypothesis: H0 : Other factors of cyl, wt, hp, and disp does not affect the mileage, or linear models of all the parameters is same.
+
+###Simple Linear Regression
+
+
+```{r}
+Fac1 <-  lm(mpg~am, data)
+summary(Fac1)
+
+```
+### Understanding the coefficients 
+
+We can infer that Adj r-square= 33.8% which explains the variance(relation) between mpg and am
+
+
+### Multi Linear Regression
+
+```{r}
+Fac2 <- lm(mpg~am+wt+hp,data)
+Fac3 <- lm(mpg~am+wt+hp+cyl,data)
+Fac4 <- lm(mpg~am+wt+hp+cyl+disp,data)
+
+anova(Fac1,Fac2,Fac3,Fac4)
+
+
+summary(Fac4)
+
+```
+When considering other factors, Adj R-square= 82.7%.
+The model Fac4 explains 82.7% of the variance.
+
+
+we can infer that p-value is 5.579 x 10^9, which is less than 0.05 (assumed alpha). 
+"If p is low null will blow", we reject the null hypothesis. Hence other factors of a car does effect the mileage of a car.
+
+Graph between weight and MPG
+
+```{r fig.width=4, fig.height=3}
+library(ggplot2)
+z <- ggplot(data=mtcars, aes(x=wt, y=mpg, color=cyl))
+z <- z + geom_point()
+z
+### we can see that heaviest car has the least mileage
+```
+
+
+Graph between Cyl and MPG
+```{r fig.width=4, fig.height=3}
+g<-ggplot(mtcars, aes(x=cyl, y=mpg, color= wt)) + geom_point()
+g
+
+```
+
+### Understanding the Residuals
+```{r fig.width= 10, fig.height=10}
+ResidualGraphs <- lm(mpg ~ am + wt + hp + cyl  , data)
+par(mfrow = c(2,2), mar = c(3,1,2,2))
+plot(ResidualGraphs)
+```
+```{r}
+h <- ggplot( data, aes(wt, mpg, color= factor(am)))
+h <- h + geom_point()
+h <- h+stat_smooth(method = lm)  + labs(x = "wt", y = "mpg", title = "Confidence Interval for MPG") + scale_colour_discrete(name = "Transmission Type")
+h
+
+```
+
+### Conclusion:
+
+Due to the overlapping of Confidence intervals of automatic transmissions and manual transmissions we can conclude that there is no much difference between mpg of Automatic and manual transmission, without considering other factors.
